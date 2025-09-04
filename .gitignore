@@ -1,0 +1,20 @@
+# Build output
+**/Debug/
+**/Release/
+*.obj
+*.pdb
+*.exe
+*.ilk
+*.log
+*.tlog
+*.idb
+*.ipch
+*.db
+*.suo
+*.VC.db
+*.VC.opendb
+*.user
+*.cache
+
+# VS folders
+.vs/
