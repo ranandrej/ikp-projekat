@@ -12,15 +12,59 @@ list* free_workers_list = NULL;
 list* busy_workers_list = NULL;
 
 queue* q = NULL;
+void createWorker(int sleepTimeMs) {
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESHOWWINDOW; // koristi show window flag
+    si.wShowWindow = SW_SHOW;
+    ZeroMemory(&pi, sizeof(pi));
+
+    wchar_t cmd[128];
+    swprintf(cmd, 128, L"Worker.exe %d", sleepTimeMs); // Unicode string
+
+    if (!CreateProcess(
+        NULL,   // aplikacija – NULL jer koristimo command line
+        cmd,    // komandna linija sa argumentom
+        NULL,
+        NULL,
+        FALSE,
+        CREATE_NEW_CONSOLE,
+        NULL,
+        NULL,
+        &si,
+        &pi
+    )) {
+        printf("CreateProcess failed (%d).\n", GetLastError());
+    }
+    else {
+        printf("Worker started with sleep=%d ms\n", sleepTimeMs);
+        CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
+    }
+}
+
 
 int main() {
     DWORD listenerClientID;
     DWORD listenerWorkerID;
+    DWORD dispatcherID;
+
     semaphoreEnd = CreateSemaphore(0, 0, 4, NULL);
     create_queue(20);
+    init_list(&free_workers_list);
+    init_list(&busy_workers_list);
+    createWorker(10000);
+    createWorker(2000);
+
+   
+
     printf("Starting Load Balancer...\n");
     HANDLE hClientListener = CreateThread(NULL, 0,&client_listener, (LPVOID)0,0,&listenerClientID);
     HANDLE hListenerWorker = CreateThread(NULL, 0, &worker_listener, (LPVOID)0, 0, &listenerWorkerID);
+    HANDLE hRoundRobinDispatcher = CreateThread(NULL, 0, &round_robin_dispatcher, (LPVOID)0, 0, &dispatcherID);
 
     printf("Press any key to exit:\n");
     getchar();

@@ -45,8 +45,9 @@ DWORD WINAPI client_read_write(LPVOID param) {
             messageStruct* newMessageStruct = (messageStruct*)malloc(sizeof(messageStruct));
             strcpy(newMessageStruct->clientName, clientName);
             strcpy(newMessageStruct->bufferNoName, dataBuffer);
-
             enqueue(newMessageStruct);
+           ;
+
             if (strcmp(dataBuffer, "exit") == 0) {
                 printf("Connection with client %d closed.\n", client_num);
                 break;
@@ -138,7 +139,6 @@ DWORD WINAPI client_listener(LPVOID param) {
         // Popuni strukturu za novi klijent thread
         clientThreadStruct* cli = (clientThreadStruct*)malloc(sizeof(clientThreadStruct));
         cli->acceptedSocket = acceptedSocket;
-        sprintf(cli->clientName, "Client%d", client_num++);
 
         // Startuj thread za komunikaciju sa tim klijentom
         DWORD threadId;

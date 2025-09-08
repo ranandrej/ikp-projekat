@@ -1,4 +1,4 @@
-#define  _CRT_SECURE_NO_WARNINGS
+﻿#define  _CRT_SECURE_NO_WARNINGS
 #pragma warning(disable:4996)
 #include "list.h"
 
@@ -139,43 +139,73 @@ node* find_previous_node(list* lst, node* target) {
 void move_specific_node(list* to, list* from, node* n) {
 	EnterCriticalSection(&from->cs);
 	EnterCriticalSection(&to->cs);
+
+	if (!from->head || !n) {
+		LeaveCriticalSection(&to->cs);
+		LeaveCriticalSection(&from->cs);
+		return;
+	}
+
 	node* prev = NULL;
 	node* curr = from->head;
+
+	// pronađi node u from listi
 	while (curr != NULL && curr != n) {
 		prev = curr;
 		curr = curr->next;
 	}
 
-	prev = curr->next;
-	if (to->head == NULL) {
-		to->head = curr;
+	if (!curr) { // node nije pronađen
+		LeaveCriticalSection(&to->cs);
+		LeaveCriticalSection(&from->cs);
+		return;
 	}
-	to->tail = curr;
-	curr->next = NULL;
+
+	// ukloni iz from liste
+	if (prev) {
+		prev->next = curr->next;
+	}
+	else {
+		from->head = curr->next; // node je bio head
+	}
+
+	if (curr == from->tail) {
+		from->tail = prev; // update tail
+	}
+
+	curr->next = NULL; // reset next
+
+	// ubaci na kraj to liste
+	if (!to->head) {
+		to->head = to->tail = curr;
+	}
+	else {
+		to->tail->next = curr;
+		to->tail = curr;
+	}
 
 	LeaveCriticalSection(&to->cs);
 	LeaveCriticalSection(&from->cs);
 }
 
+
 void print_list(list* l) {
 	EnterCriticalSection(&l->cs);
-	printf("LIST: \n");
-	node* current = l->head;
-	while (current != NULL) {
-		WCHAR* thread_name_READ = NULL;
-		WCHAR* thread_name_WRITE = NULL;
-		if (GetThreadDescription(current->thread_read, &thread_name_READ)) {
-			printf("[ %ls ] --> ", thread_name_READ);
-		}
-		else {
-			printf("[Unknown Read Thread]");
-		}
+	printf("Workers List:\n");
 
+	node* current = l->head;
+	int count = 0;
+	while (current != NULL) {
+		printf("Worker #%d: %s:%d\n",current->port, current->ip, current->port);
 		current = current->next;
 	}
-	printf("\n");
+
+	if (count == 0)
+		printf("List is empty.\n");
+
 	LeaveCriticalSection(&l->cs);
 }
+
 
 void delete_list(list* l) {
 	EnterCriticalSection(&l->cs);

@@ -12,6 +12,8 @@ typedef struct node {
 	SOCKET acceptedSocket;
 	messageStruct* msgStruct;
 	struct node* next;
+	char ip[16];      // IP address kao string
+	int port;
 }node;
 
 typedef struct {
