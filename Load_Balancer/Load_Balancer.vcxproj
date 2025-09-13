@@ -141,9 +141,7 @@
   <ItemGroup>
     <ClCompile Include="client_communication.cpp" />
     <ClCompile Include="common.cpp" />
-    <ClCompile Include="list.cpp" />
     <ClCompile Include="loadbalancer.cpp" />
-    <ClCompile Include="queue.cpp" />
     <ClCompile Include="worker_communication.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -151,9 +149,12 @@
     <ClInclude Include="client_communication.h" />
     <ClInclude Include="common.h" />
     <ClInclude Include="includes.h" />
-    <ClInclude Include="list.h" />
-    <ClInclude Include="queue.h" />
     <ClInclude Include="worker_communication.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Common.vcxproj">
+      <Project>{08e88764-9301-4ceb-a667-7d7be96f7f1a}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

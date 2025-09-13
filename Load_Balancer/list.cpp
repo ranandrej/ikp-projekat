@@ -2,6 +2,7 @@
 #pragma warning(disable:4996)
 #include "list.h"
 
+
 void init_list(list** l) {
 	*l = (list*)malloc(sizeof(list));
 	(*l)->head = NULL;
