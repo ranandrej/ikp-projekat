@@ -3,6 +3,8 @@
 #include <windows.h>   
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+
 
 #define CLIENT_NAME_LEN 10
 #define BUFFER_WITHOUT_NAME 246
