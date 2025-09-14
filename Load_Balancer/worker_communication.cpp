@@ -62,26 +62,32 @@ DWORD WINAPI worker_write(LPVOID param) {
         WaitForSingleObject(msgSemaphore, INFINITE);
 
         messageStruct* msg = new_node->msgStruct;
-        if (!msg) continue;
+        if (!msg) {
+            printf("[WORKER %s:%d] msgStruct is NULL, skipping...\n", new_node->ip, new_node->port);
+            continue;
+        }
 
-        // formatiramo poruku: ClientName:Message
-        char messageBuff[BUFFER_SIZE + 1];
-        sprintf(messageBuff, "%s:%s", msg->clientName, msg->bufferNoName);
+        
 
-        int iResult = send(acceptedSocket, messageBuff, (int)strlen(messageBuff), 0);
-        printf("[WORKER %s:%d] Sent: %s\n", new_node->ip, new_node->port, messageBuff);
-
+        int iResult = send(acceptedSocket, (char*)msg, sizeof(messageStruct), 0);
         if (iResult == SOCKET_ERROR) {
-            printf("[WORKER WRITE] send failed: %d\n", WSAGetLastError());
-            break;
+            printf("[ERROR] Failed to send message\n");
+        }
+        else {
+            printf("[WORKER %s:%d] Sent messageStruct to worker\n", new_node->ip, new_node->port);
         }
 
         iResult = recv(acceptedSocket, recvBuff, BUFFER_SIZE, 0);
         if (iResult > 0) {
             recvBuff[iResult] = '\0';
         
-
-            if (strcmp(recvBuff, "DONE") == 0) {
+            if (strcmp(recvBuff, "BUSY") == 0) {
+                printf("[WORKER %s:%d] Worker is busy. Message dropped, keeping in busy list.\n", new_node->ip, new_node->port);
+                enqueue(msg);//vrati poruku u queue
+                new_node->msgStruct = NULL;
+                // NIŠTA NE RADIŠ – worker ostaje u busy dok se sam ne javi sa DONE
+            }
+            else if (strcmp(recvBuff, "DONE") == 0) {
                
                 // Worker završio – vrati ga u free listu
                 move_specific_node(free_workers_list, busy_workers_list, new_node);

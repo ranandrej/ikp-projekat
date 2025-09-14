@@ -12,7 +12,7 @@ list* free_workers_list = NULL;
 list* busy_workers_list = NULL;
 
 queue* q = NULL;
-void createWorker(int sleepTimeMs) {
+void createWorker(int sleepTimeMs,int queueCapacity) {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
 
@@ -23,7 +23,7 @@ void createWorker(int sleepTimeMs) {
     ZeroMemory(&pi, sizeof(pi));
 
     wchar_t cmd[128];
-    swprintf(cmd, 128, L"Worker.exe %d", sleepTimeMs); // Unicode string
+    swprintf(cmd, 128, L"Worker.exe %d %d", sleepTimeMs,queueCapacity); // Unicode string
 
     if (!CreateProcess(
         NULL,   // aplikacija – NULL jer koristimo command line
@@ -40,7 +40,7 @@ void createWorker(int sleepTimeMs) {
         printf("CreateProcess failed (%d).\n", GetLastError());
     }
     else {
-        printf("Worker started with sleep=%d ms\n", sleepTimeMs);
+        printf("Worker started with sleep=%d,and capacity=%d ms\n", sleepTimeMs,queueCapacity);
         CloseHandle(pi.hThread);
         CloseHandle(pi.hProcess);
     }
@@ -56,8 +56,8 @@ int main() {
     create_queue(20);
     init_list(&free_workers_list);
     init_list(&busy_workers_list);
-    createWorker(10000);
-    createWorker(2000);
+    createWorker(0,2);
+    createWorker(0,10);
 
    
 

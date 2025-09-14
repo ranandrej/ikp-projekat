@@ -41,7 +41,7 @@ DWORD WINAPI client_read_write(LPVOID param) {
         int iResult = recv(acceptedSocket, dataBuffer, BUFFER_SIZE, 0);
         if (iResult > 0) { //ako nije WSA error ispisuje poruku
             dataBuffer[iResult] = '\0';
-            printf("Client %d sent: %s.\n", client_num, dataBuffer);
+            printf("Client_%d sent: %s.\n", client_num, dataBuffer);
             messageStruct* newMessageStruct = (messageStruct*)malloc(sizeof(messageStruct));
             strcpy(newMessageStruct->clientName, clientName);
             strcpy(newMessageStruct->bufferNoName, dataBuffer);
@@ -139,6 +139,8 @@ DWORD WINAPI client_listener(LPVOID param) {
         // Popuni strukturu za novi klijent thread
         clientThreadStruct* cli = (clientThreadStruct*)malloc(sizeof(clientThreadStruct));
         cli->acceptedSocket = acceptedSocket;
+        sprintf(cli->clientName, "klijent_%d", client_count);
+        cli->clientName[CLIENT_NAME_LEN - 1] = '\0';
 
         // Startuj thread za komunikaciju sa tim klijentom
         DWORD threadId;

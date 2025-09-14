@@ -49,7 +49,7 @@ void create_queue(int capacity) {
 		}
 
 		void enqueue(messageStruct* messageArray) {
-			if (is_queue_full()) {
+			if (is_queue_full) {
 				WaitForSingleObject(hSemaporeQueueEmpty, INFINITE);
 			}
 			/*while (is_queue_full()) {
