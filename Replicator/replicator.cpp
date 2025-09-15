@@ -10,6 +10,52 @@
 
 #define REPLICATOR_PORT 7079
 
+WorkerData* workersListHead = NULL;
+
+void add_message_to_worker(WorkerData* worker, messageStruct* newMsg) {
+    MessageNode* newNode = (MessageNode*)malloc(sizeof(MessageNode));
+    if (!newNode) {
+        printf("Memory allocation failed for MessageNode!\n");
+        return;
+    }
+    newNode->msg = newMsg;
+    newNode->next = NULL;
+
+    if (worker->msgTail == NULL) {
+        // lista prazna
+        worker->msgHead = worker->msgTail = newNode;
+    }
+    else {
+        worker->msgTail->next = newNode;
+        worker->msgTail = newNode;
+    }
+}
+void print_all_workers_and_messages(WorkerData* head) {
+    WorkerData* currentWorker = head;
+    while (currentWorker != NULL) {
+        printf("Worker: %s:%d\n", currentWorker->workerNode->ip, currentWorker->workerNode->port);
+
+        MessageNode* currentMsg = currentWorker->msgHead;
+        while (currentMsg != NULL) {
+            printf("\tClient: %s\n", currentMsg->msg->clientName);
+            printf("\tMessage: %s\n\n", currentMsg->msg->bufferNoName);
+            currentMsg = currentMsg->next;
+        }
+        currentWorker = currentWorker->next;
+    }
+}
+void free_message_list(MessageNode* head) {
+    MessageNode* current = head;
+    while (current != NULL) {
+        MessageNode* next = current->next;
+        free(current->msg);  
+        free(current);
+        current = next;
+    }
+}
+
+
+
 DWORD WINAPI replicator_listener(LPVOID param) {
     SOCKET listenSocket = INVALID_SOCKET;
     WSADATA wsaData;
@@ -62,12 +108,37 @@ DWORD WINAPI replicator_listener(LPVOID param) {
             new_node->port = ntohs(clientAddr.sin_port);
             InetNtopA(AF_INET, &clientAddr.sin_addr, new_node->ip, sizeof(new_node->ip));
 
+            WorkerData* newWorkerData = (WorkerData*)malloc(sizeof(WorkerData));
+
+            newWorkerData->workerNode = new_node;
+            newWorkerData->msgHead = NULL;
+            newWorkerData->msgTail = NULL;
+            newWorkerData->next = NULL;
+            InitializeCriticalSection(&newWorkerData->cs);
+            if (workersListHead == NULL) {
+                workersListHead = newWorkerData;
+            }
+            else {
+                WorkerData* temp = workersListHead;
+                while (temp->next != NULL) {
+                    temp = temp->next;
+                }
+                temp->next = newWorkerData;
+            }
+
+
+            // Ubaci ga u listu svih WorkerData (npr. na kraj)
+
+
             DWORD replicatorWID;
-            new_node->thread_write = CreateThread(NULL, 0, &replicator_write, (LPVOID)new_node, 0, &replicatorWID);
+            new_node->thread_write = CreateThread(NULL, 0, &replicator_write, (LPVOID)newWorkerData, 0, &replicatorWID);
 
             // Dodajemo u listu svih WR-a koji šalju RP
-            //insert_last_node(replica_workers_list, new_node);
         }
+        
+        
+
+        
     }
 
     closesocket(listenSocket);
@@ -75,19 +146,43 @@ DWORD WINAPI replicator_listener(LPVOID param) {
     return 0;
 }
 DWORD WINAPI replicator_write(LPVOID param) {
-    node* wr_node = (node*)param;
+    WorkerData* wr_node = (WorkerData*)param;
 
     while (true) {
-        char buffer[1024];
-        int bytesReceived = recv(wr_node->acceptedSocket, buffer, sizeof(buffer), 0);
-        if (bytesReceived <= 0) break;
-        buffer[bytesReceived] = '\0';
-        // lock mutex pre upisa u RP storage
-        printf("WORKER sent:%s\n",buffer);
-        print_queue();
-      
-    }
+        messageStruct* newMsg = (messageStruct*)malloc(sizeof(messageStruct));
+        if (!newMsg) {
+            printf("Memory allocation failed!\n");
+            break;
+        }
 
-    closesocket(wr_node->acceptedSocket);
+        int bytesReceived = recv(wr_node->workerNode->acceptedSocket, (char*)newMsg, sizeof(messageStruct), 0);
+        if (bytesReceived <= 0) {
+            free(newMsg);
+            break;
+        }
+        if (bytesReceived < sizeof(messageStruct)) {
+            printf("Partial message received, ignoring\n");
+            free(newMsg);
+            continue;
+        }
+
+        EnterCriticalSection(&wr_node->cs); // pretpostavljam da imaš kritičnu sekciju u WorkerData
+
+        add_message_to_worker(wr_node, newMsg);
+
+        LeaveCriticalSection(&wr_node->cs);
+
+        print_all_workers_and_messages(workersListHead);
+    }
+    
+    closesocket(wr_node->workerNode->acceptedSocket);
+    EnterCriticalSection(&wr_node->cs);
+    free_message_list(wr_node->msgHead);
+    LeaveCriticalSection(&wr_node->cs);
+    DeleteCriticalSection(&wr_node->cs);
+
+    free(wr_node->workerNode);
+    free(wr_node);
     return 0;
 }
+

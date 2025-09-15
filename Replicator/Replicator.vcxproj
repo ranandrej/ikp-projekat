@@ -140,16 +140,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\Downloads\loadbalancer_project_headers\replicator\main.cpp" />
-    <ClCompile Include="..\..\..\..\Downloads\loadbalancer_project_headers\replicator\replicator.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\..\Downloads\loadbalancer_project_headers\replicator\replicator.h" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="replicator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.vcxproj">
       <Project>{08e88764-9301-4ceb-a667-7d7be96f7f1a}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="replicator.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

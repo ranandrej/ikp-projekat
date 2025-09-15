@@ -15,15 +15,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\Downloads\loadbalancer_project_headers\replicator\main.cpp">
+    <ClCompile Include="replicator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\Downloads\loadbalancer_project_headers\replicator\replicator.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\Downloads\loadbalancer_project_headers\replicator\replicator.h">
+    <ClInclude Include="replicator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
